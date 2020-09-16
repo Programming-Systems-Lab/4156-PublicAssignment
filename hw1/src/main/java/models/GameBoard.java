@@ -32,6 +32,19 @@ public class GameBoard {
     this.winner = 0;
     this.isDraw = false;
   }
+  
+  /** Restart.
+   * Restarts the entire game board
+   */
+  public void restart() {
+    this.p1 = null;
+    this.p2 = null;
+    this.gameStarted = false;
+    this.turn = 1;
+    this.boardState = new char[3][3];
+    this.winner = 0;
+    this.isDraw = false;
+  }
 
   // Returns the player 1 object
   public Player getPlayer1() {
@@ -88,6 +101,18 @@ public class GameBoard {
     this.gameStarted = true;
   }
   
+  /** Everyone Is Here.
+   * Determines if both players are present
+   * @return boolean if everyone is here 
+   */
+  public boolean everyoneIsHere() {
+    if ((this.p1 != null) && (this.p2 != null)) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+  
   /** Get GameStarted.
    * @return the game's status
    */
@@ -109,23 +134,46 @@ public class GameBoard {
       return false;
     }
   }
+  
+  /** Switch Turn.
+   * Switches the turn depending on the player's id
+   * @param player - the current player
+   */
+  private void switchTurn(Player player) {
+    if (player.getId() == 1) {
+      this.turn = 2;
+    } else if (player.getId() == 2) {
+      this.turn = 1;
+    }
+  }
+  
+  /** Is It My Turn.
+   * Determine's if it's player-i's turn to make a move
+   * @param playerId - id of current player
+   * @return True if id=turn (id), False otherwise
+   */
+  public boolean isMyTurn(int playerId) {
+    if (playerId == this.turn) {
+      return true;
+    } else {
+      return false;
+    }
+  }
 
   /** Make Move.
    * This function is called when player's move is valid, 
    * meaning there is an open spot in board. Assign's the open
-   * spot the player's symbol
-   * @param symbol - the player's symbol; either 'X' or 'O'
-   * @param x - x coordinate of player's move
-   * @param y - y coordinate of player's move
+   * spot the player's symbol and switch turns
+   * @param move - the player's move (x,y coordinates and player object)
    */
-  public void makeMove(char symbol, int x, int y) {
-    this.boardState[x][y] = symbol;
-    this.turn += 1;
+  public void makeMove(Move move) {
+    Player player = move.getPlayer();
+    this.boardState[move.getMoveX()][move.getMoveY()] = player.getType();
+    switchTurn(player);
   }
-
+  
   /** Are There More Available Moves.
    * Iterates the board to find an open spot
-   * Note: for debugging purposes
    * @return True if board has an open spot. False otherwise.
    */
   public boolean moreAvailableMoves() {
@@ -150,39 +198,43 @@ public class GameBoard {
     int matchesVertical = 0;
     int matchesLeftToRight = 0;
     int matchesRightToLeft = 0;
+    System.out.println(symbol);
 
     for (int i = 0; i < 3; i++) {
       for (int j = 0; j < 3; j++) {
         if (this.boardState[i][j] == symbol) {
           matchesHorizontal += 1;
         }
-        if (this.boardState[i][0] == symbol) {
+        if (this.boardState[j][i] == symbol) {
           matchesVertical += 1;
         }
-        if (this.boardState[i][i] == symbol) {
-          matchesLeftToRight += 1;
-        }
-        if (this.boardState[i][2 - i] == symbol) {
-          matchesRightToLeft += 1;
-        }
       }
-
-      if (matchesHorizontal == 3 || matchesVertical == 3 
-          || matchesLeftToRight == 3 || matchesRightToLeft == 3) {
+      System.out.println(String.format("H: %d,V: %d",
+          matchesHorizontal, matchesVertical));
+      
+      if (matchesHorizontal == 3 || matchesVertical == 3) {
         return true;
       } else {
         matchesHorizontal = 0;
         matchesVertical = 0;
-        matchesLeftToRight = 0;
-        matchesRightToLeft = 0;
       }
+      
+      if (this.boardState[i][i] == symbol) {
+        matchesLeftToRight += 1;  
+      } 
+      if (this.boardState[i][2 - i] == symbol) {
+        matchesRightToLeft += 1;
+      }
+    }
+    if (matchesLeftToRight == 3 || matchesRightToLeft == 3) {
+      return true;
     }
     return false;
   }
 
   /** Print Board.
    * Prints the entire 3x3 board to view current open/taken spots 
-   * Note: For debugging purposes
+   * Note: This is for debugging purposes
    */
   public void printBoard() {
     for (int i = 0; i < this.boardState.length; i++) {
@@ -196,7 +248,7 @@ public class GameBoard {
    * @return True is draw. False otherwise
    */
   public boolean thereIsADraw() {
-    if ((this.turn > 9)) {
+    if (!this.moreAvailableMoves()) {
       this.isDraw = true;
       return true;
     } else {
@@ -206,7 +258,7 @@ public class GameBoard {
   }
   
   /** Get IsDraw Status.
-   * Note: For debugging purposes
+   * Note: This is for debugging purposes
    * @return boolean if there is a draw or not.
    */
   public boolean getIsDraw() {
@@ -214,6 +266,7 @@ public class GameBoard {
   }
 
   /** Get Winner.
+   * Note: This is for debugging purposes
    * @return the id of player who won
    */
   public int getWinner() {

@@ -22,7 +22,6 @@ public class Move {
   }
   
   /** Get Player.
-   * Note: For debugging purposes
    * @return the player who made the move
    */
   public Player getPlayer() {
@@ -30,7 +29,6 @@ public class Move {
   }
   
   /** Get Get moveX.
-   * Note: For debugging purposes
    * @return the X-coordinate of their move
    */
   public int getMoveX() {
@@ -38,7 +36,6 @@ public class Move {
   }
   
   /** Get Get moveX.
-   * Note: For debugging purposes
    * @return the X-coordinate of their move
    */
   public int getMoveY() {

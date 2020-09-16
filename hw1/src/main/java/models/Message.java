@@ -23,7 +23,7 @@ public class Message {
   }
   
   /** Get Message's code.
-   * Note: For debugging purposes
+   * Note: This is for debugging purposes
    * @return the (status) code
    */
   public int getCode() {
@@ -31,14 +31,24 @@ public class Message {
   }
   
   /** Get Message's message.
-   * Note: For debugging purposes
+   * Note: This is for debugging purposes
    * @return the (string) message
    */
   public String getMessage() {
     return this.message;
   }
   
-  /** Creates Draw (i.e. Tie) Message.
+  /** Create Game Not Started Messsage.
+   * Generated when either player hasn't joined the game
+   * @return this message
+   */
+  public Message createGameNotStartedMessage() {
+    this.code = 403;
+    this.message = "Please wait. Not all players have joined game";
+    return this;
+  }
+  
+  /** Create Draw (i.e. Tie) Message.
    * Since move was valid, set the code to 200 and 
    * return a simple message informing of Tie
    * @return this message
@@ -46,6 +56,16 @@ public class Message {
   public Message createDrawMessage() {
     this.code = 200;
     this.message = "There is a Draw";
+    return this;
+  }
+  
+  /** Create Can't Move Message.
+   * Generated when it's not the player's turn
+   * @return this message
+   */
+  public Message createNotYourTurnMessage() {
+    this.code = 403;
+    this.message = "Not your turn";
     return this;
   }
   
@@ -72,7 +92,7 @@ public class Message {
       this.message = "Valid Move";
     } else {
       this.code = 403;
-      this.message = "Invalid Move";
+      this.message = "Invalid Move. Please try somewhere else.";
     }
     return this;
   }
@@ -83,7 +103,7 @@ public class Message {
    */
   public Message createCannotJoinMessage() {
     this.code = 403;
-    this.message = "Game has not started";
+    this.message = "Cannot join as game has already started.";
     return this;
   }
   

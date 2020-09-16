@@ -1,7 +1,6 @@
 package controllers;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import io.javalin.Javalin;
 import java.io.IOException;
 import java.util.Queue;
@@ -13,7 +12,7 @@ import org.eclipse.jetty.websocket.api.Session;
 
 class PlayGame {
 
-  private static final int PORT_NUMBER = 8084;
+  private static final int PORT_NUMBER = 8080;
 
   private static Javalin app;
   
@@ -32,77 +31,101 @@ class PlayGame {
     });
     
     GameBoard gameBoard = new GameBoard();
-    GsonBuilder builder = new GsonBuilder();
-    Gson gson = builder.create();
+    Gson gson = new Gson();
     
-    // Get Game -> Returns initial UI which allows user to start new game
+    /* Get the Game by returning the initial UI thus allowing
+     * the user (player 1) to start a new game.
+     */
     app.get("/newgame", ctx -> {
+      gameBoard.restart();
       ctx.redirect("/tictactoe.html");
     });
     
-    // Start Game -> Initializes the board and setups player 1. 
+    /* Start the Game by initializing the board and 
+     * setting up player 1.
+     */
     app.post("/startgame", ctx -> {
       char type = ctx.formParam("type").charAt(0);
-      // System.out.println(type);
       Player player1 = new Player(type, 1);
-      // System.out.println("I created player 1");
       gameBoard.setPlayer1(player1);
-      // System.out.println("I added player1 to gameBoard");
-      // gameBoard.printBoard();
-      System.out.println(gameBoard.getGameStarted());
       ctx.result(gson.toJson(gameBoard));
     });
     
-    // Join Game -> Adds player 2 to game board. Once in, the game starts
+    /* Join the game as player 2. If player 1 has yet to join or game has already
+     * started, then report the appropriate message. Otherwise, redirect to page
+     * and send the game board to both players.
+     */
     app.get("/joingame", ctx -> {
-      if (gameBoard.getGameStarted() == false) {
-        char type = gameBoard.getOppositeType();
-        // System.out.println(type);
-        gameBoard.setPlayer2(new Player(type, 2));
-        // System.out.println("I added player2 to gameBoard");
-        // gameBoard.printBoard();
-        System.out.println(gameBoard.getGameStarted());
-        System.out.println(gson.toJson(gameBoard));
-        ctx.redirect("/tictactoe.html?p=2");
-        System.out.println("I'm about to send board");
-        sendGameBoardToAllPlayers(gson.toJson(gameBoard));
-      } else {
+      if (gameBoard.getPlayer1() == null) {
+        // Player 1 has not join us
+        Message message = new Message(false).createGameNotStartedMessage();
+        ctx.result(gson.toJson(message));
+        
+      } else if (gameBoard.getGameStarted() == true) {
+        // Player 1 has joined but game has already started
         Message message = new Message(false).createCannotJoinMessage();
         ctx.result(gson.toJson(message));
+        
+      } else {
+        // Player 1 has joined and game hasn't started
+        char type = gameBoard.getOppositeType();
+        gameBoard.setPlayer2(new Player(type, 2));
+        ctx.redirect("/tictactoe.html?p=2");
+        sendGameBoardToAllPlayers(gson.toJson(gameBoard));
       }
     });
     
-    // Move -> Updates game-board if move is valid. Otherwise, returns error message
-    app.get("/move/:playerId", ctx -> {
-      int playerId = Integer.parseInt(ctx.queryParam("playerId"));
-      int moveX = Integer.parseInt(ctx.formParam("x"));
-      int moveY = Integer.parseInt(ctx.formParam("x"));
-      
-      Player player = gameBoard.getPlayer(playerId);
-      Move move = new Move(player, moveX, moveY);
+    /* Make a Move by updating the game board if the move is valid.
+     * Otherwise return the appropriate error message
+     */
+    app.post("/move/:playerId", ctx -> {
       Message message = null;
+      int playerId = ctx.pathParam("playerId", Integer.class).get();
       
-      // checking to see if valid move
-      if (gameBoard.isValidMove(move.getMoveX(), move.getMoveY())) {
-        // since move is valid, we make the move
-        gameBoard.makeMove(player.getType(), move.getMoveX(), move.getMoveY());
+      // Checking conditions before making a move
+      if (!gameBoard.everyoneIsHere()) {
+        // Not everyone has joined the game
+        message = new Message(false).createGameNotStartedMessage();
+        ctx.result(gson.toJson(message));
         
-        // with every move, we must see if draw, win, or none of the above
-        if (gameBoard.thereIsADraw() == true) {
-          message = new Message(true).createDrawMessage(); 
-        } else if (gameBoard.isWinner(player.getType())) {
-          message = new Message(true).createWinMessage(player.getId());
-          gameBoard.setWinner(player.getId());
-        } else {
-          message = new Message(true).createDefaultMessage();
-        }
-      
-      // not a valid move, so respond with invalid move message  
+      } else if (!gameBoard.isMyTurn(playerId)) {
+        // Everyone has joined but it's not the player's turn
+        message = new Message(false).createNotYourTurnMessage();
+        ctx.result(gson.toJson(message));
+        
       } else {
-        message = new Message(false).createDefaultMessage();
+        // Everyone has joined and it's the player's turn
+        int moveX = Integer.parseInt(ctx.formParam("x"));
+        int moveY = Integer.parseInt(ctx.formParam("y"));
+        Player player = gameBoard.getPlayer(playerId);
+        Move move = new Move(player, moveX, moveY);
+            
+        // Check if move is valid
+        if (gameBoard.isValidMove(move.getMoveX(), move.getMoveY())) {
+          // Because move is valid, we can place mark on board
+          gameBoard.makeMove(move);
+          
+          // After every move, we see if win, draw, or none (regular move)
+          if (gameBoard.isWinner(player.getType())) {
+            // Win
+            message = new Message(true).createWinMessage(player.getId());
+            gameBoard.setWinner(player.getId());
+          } else if (gameBoard.thereIsADraw() == true) {
+            // Draw
+            message = new Message(true).createDrawMessage();
+          } else {
+            // Regular move - neither win nor draw
+            message = new Message(true).createDefaultMessage();
+          }
+      
+        // Move is not valid thus we respond with an invalid move message  
+        } else {
+          // System.out.println("not a valid move");
+          message = new Message(false).createDefaultMessage();
+        }
+        ctx.result(gson.toJson(message));
+        sendGameBoardToAllPlayers(gson.toJson(gameBoard));
       }
-      ctx.result(gson.toJson(message));
-      sendGameBoardToAllPlayers(gson.toJson(gameBoard));
     });
 
     // Web sockets - DO NOT DELETE or CHANGE
