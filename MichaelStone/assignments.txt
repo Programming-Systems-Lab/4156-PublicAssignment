@@ -20,8 +20,8 @@ Add the extension and reload Visual studio Code.
 
 Now we need to download some libraries.
 
-In your terminal of choice enter the command "pip install flask", and "pip install coverage" this will install the packages needed to use flask endpoints,
-and check code coverage of unit testing.
+In your terminal of choice enter the command "pip install flask", "pip install coverage", and "python -m pip install flake8". 
+This will install the packages needed to use flask endpoints, check code coverage of unit testing, and help us spot bugs.
 
 Now for the actual assignment. For part 1 We are going to implement the game Connect 4. The idea is we want two players to connect to our Flask Project and
 begin playing with the hopes that one player wins. The Rules are as Follows:
@@ -68,7 +68,7 @@ jsonify(move=<game_board>, invalid=False, winner=<current_winner>)
 endpoint move2/: Same as move1 but for player2 instead
 -------------------------------------------------------------------------------------------
 
-Assignment 2: Unit Testing
+Assignment 2: Testing and coverage
 
 In this part you are going to write test methods to verify that the code you wrote in the pervious parts of your assignment fully work as intended.
 Within the same Directory as app.py create python test files for each python class (not including app.py). So if you implemented part1 using only Gameboard.py
@@ -96,8 +96,15 @@ To test all methods and to view coverage do the following.
 by double clicking. The html page will highlight in red which lines of code haven't been hit and give you a percent of how much of the file has been tested.
 You want this number to be as close to 100% as possible.
 
-Documentation for coverage if you are interested:
+Finally we need to test bugs. To do this we are going to use flake8. open up command palette again in Visual Studio Code "Ctrl + shift + P" for Windows or "cmd+shift+P" on Mac. Enter "lint" and select "Python: Select Linter" and then select flake8. To run flake8 make sure you are in the project directory
+and enter the command "flake8 > bugs.txt" this will run flake8 on all python files and then output the results into a txt called bugs.txt.
+This bugs.txt file will identify all of the lines and files that have potential bugs in them and tell you what is causing the issue.
+
+A correct implementation will create a blank bugs.txt file since there would be no bugs
+
+Documentation for coverage and flake8 if you are interested:
 https://coverage.readthedocs.io/en/coverage-5.5/ 
+https://flake8.pycqa.org/en/latest/
 
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------
