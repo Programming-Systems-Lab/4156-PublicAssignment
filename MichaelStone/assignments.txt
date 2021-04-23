@@ -32,8 +32,9 @@ begin playing with the hopes that one player wins. The Rules are as Follows:
 4. The first person to connect 4 tokens in a row in any direction (Vertically, horizontally, or diagonally) ones the game.
 5. If all spaces are used up the game is a draw.
 
+Start off by cloning the assignment reposotory from https://github.com/Programming-Systems-Lab/4156-PublicAssignment/
 To open the assignment in Visual Studio Code in the left side bar there is a button that looks like 2 pages. Click on that button and select "add Folder"
-then find the starter code for your assignment and open it. This will allow you to switch through multiple files quickly as the project workspace gets bigger.
+then find go to the location where you cloned the repo and click on the "skeleton" folder. The skeleton folder is where the startercode for all of your assignments will be located. Once you open the skeleton folder in visual studio this will allow you to switch through multiple files quickly as the project workspace gets bigger.
 
 What you need to implement:
 There are some endpoints that have been defined for you and your job is to implement them to complete the functionality of the game.
